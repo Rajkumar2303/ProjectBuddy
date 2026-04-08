@@ -113,8 +113,6 @@ src/
 Every PR must include a LangSmith trace URL and tradeoff reasoning.
 
 ## Reference materials
-
-- [FounderBuddy source](https://github.com/Victoria824/FounderBuddy) — the reference architecture
 - [LangGraph cheatsheet](docs/langgraph-cheatsheet.md)
 - [FounderBuddy reference](docs/founderbuddy-reference.md)
 - [LangSmith setup](docs/langsmith-setup.md)
