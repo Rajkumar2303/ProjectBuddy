@@ -12,7 +12,7 @@ Implements `router_node` and section templates for ProjectBuddy (closes #6).
 - `src/agents/xbuddy/sections/base_prompt.py` — Updated BASE_RULES with ProjectBuddy persona
 - `src/agents/xbuddy/prompts.py` — Template mapping, `build_system_prompt()`, navigation helpers
 - `src/agents/xbuddy/nodes/router.py` — Full `router_node` implementation
-- `tests/agents/test_pr2_router.py` — 25 unit tests
+- `tests/agents/test_pr2_router.py` — 26 unit tests
 
 **router_node behaviour:**
 - **STAY** → keeps current section, builds ContextPacket

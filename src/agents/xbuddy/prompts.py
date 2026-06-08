@@ -51,10 +51,15 @@ def build_system_prompt(section_id: SectionID) -> str:
 def get_section_template(section_id: SectionID) -> SectionTemplate:
     """Return the template for a given section."""
     system_prompt = build_system_prompt(section_id)
+    # NOTE: description is derived by taking the first line of the section
+    # prompt and stripping docstring markers. This works while prompts
+    # follow the convention of a short goal line on line 1. If a prompt's
+    # first line format changes, the description may become garbled.
+    first_line = _SECTION_PROMPTS[section_id].strip().split("\n")[0].strip('"').lstrip(": ")
     return SectionTemplate(
         section_id=section_id,
         name=section_id.value.replace("_", " ").title(),
-        description=_SECTION_PROMPTS[section_id].strip().split("\n")[0].strip('"').lstrip(": "),
+        description=first_line,
         system_prompt_template=system_prompt,
         next_section=get_next_section(section_id),
     )

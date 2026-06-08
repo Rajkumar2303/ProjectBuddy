@@ -197,6 +197,18 @@ class TestRouterModify:
 
         assert result["current_section"] == SectionID.REQUIREMENTS
 
+    async def test_unknown_directive_stays(self):
+        """An unknown directive (e.g. 'fly:section') that is neither
+        STAY, NEXT, nor modify:* should log a warning and stay."""
+        state = _make_state(
+            current_section=SectionID.REQUIREMENTS,
+            directive="fly:section",
+        )
+        result = await router_node(state, None)
+
+        assert result["current_section"] == SectionID.REQUIREMENTS
+        assert result["router_directive"] == RouterDirective.STAY
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # router_node — FINISHED
