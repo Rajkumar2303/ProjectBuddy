@@ -17,8 +17,6 @@ Implements the full state schema and `initialize_node` for ProjectBuddy (closes 
 
 ## LangSmith trace
 
-<!-- Paste your LangSmith trace URL here. Every PR must include one. -->
-
 Trace URL: https://smith.langchain.com/o/73978cd4-2623-4d25-ad61-24d621b74bd5/projects/p/fd1b485c-9e93-4499-a8f3-5de76415baa6?timeModel=%7B%22duration%22%3A%221d%22%7D&peek=20260608T162532Zd1450fd2-b356-4a25-ba3e-5f715e6b85a9&peekedConversationId=test-pr1-trace&conversationTab=overview&trace_id=d1450fd2-b356-4a25-ba3e-5f715e6b85a9&run_id=20260608T162532Zd1450fd2-b356-4a25-ba3e-5f715e6b85a9&peeked_trace=20260608T162532975755Zd1450fd2-b356-4a25-ba3e-5f715e6b85a9
 
 ## Tradeoff reasoning
