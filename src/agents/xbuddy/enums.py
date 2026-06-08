@@ -18,18 +18,14 @@ class RouterDirective(str, Enum):
 
 
 class SectionID(str, Enum):
-    """Your agent's section identifiers.
+    """ProjectBuddy section identifiers — ordered by dependency chain.
 
-    TODO: Rename these to match your domain.
-    For example, if you're building StudentBuddy:
-      GOALS = "goals"
-      SCHEDULE = "schedule"
-      RESOURCES = "resources"
-      STUDY_PLAN = "study_plan"
-      REVIEW = "review"
+    The order is non-negotiable:
+      PROJECT_IDEA → REQUIREMENTS → ARCHITECTURE → TECH_STACK → IMPLEMENTATION
+    Each section is a required input to the next.
     """
-    SECTION_1 = "section_1"
-    SECTION_2 = "section_2"
-    SECTION_3 = "section_3"
-    SECTION_4 = "section_4"
-    SECTION_5 = "section_5"
+    PROJECT_IDEA = "project_idea"
+    REQUIREMENTS = "requirements"
+    ARCHITECTURE = "architecture"
+    TECH_STACK = "tech_stack"
+    IMPLEMENTATION = "implementation"
