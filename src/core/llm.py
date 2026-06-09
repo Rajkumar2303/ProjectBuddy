@@ -40,7 +40,7 @@ class LLMConfig:
     🛠️ MODIFY THESE 4 VALUES TO CONTROL YOUR ENTIRE AI SYSTEM:
     """
     
-    DEFAULT_MODEL: AllModelEnum = OpenAIModelName.GPT_4O  # Which model to use
+    DEFAULT_MODEL: AllModelEnum = OpenAIModelName.GPT_4O  # Which model to use (overridden by settings.DEFAULT_MODEL)
     DEFAULT_TEMPERATURE: float = 0.0                      # 0.0=deterministic, 1.0=creative  
     DEFAULT_MAX_TOKENS: int = 3000                        # Max response length
     DEFAULT_TOP_P: float = 0.9                           # Sampling diversity
@@ -105,9 +105,11 @@ ModelT: TypeAlias = (
 
 @cache
 def get_model(model_name: AllModelEnum | None = None, /) -> ModelT:
-    # Use centralized configuration if no model specified
+    # Use centralized configuration if no model specified.
+    # Prefer settings.DEFAULT_MODEL (auto-detected from API keys) over
+    # the hardcoded LLMConfig default.
     if model_name is None:
-        model_name = LLMConfig.DEFAULT_MODEL
+        model_name = settings.DEFAULT_MODEL or LLMConfig.DEFAULT_MODEL
     
     # NOTE: models with streaming=True will send tokens as they are generated
     # if the /stream endpoint is called with stream_tokens=True (the default)
