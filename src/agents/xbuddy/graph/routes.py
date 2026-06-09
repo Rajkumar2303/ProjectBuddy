@@ -14,7 +14,7 @@ from ..enums import RouterDirective
 from ..models import XBuddyState
 
 
-def route_after_memory_updater(state: XBuddyState) -> Literal["router"] | Literal[END]:
+def route_after_memory_updater(state: XBuddyState) -> str | Literal[END]:
     """Route after memory_updater — loop back to router or end the graph.
 
     When ``should_generate_final_output`` is True, all sections are complete

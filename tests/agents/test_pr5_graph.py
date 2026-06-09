@@ -230,7 +230,13 @@ class TestGraphEndToEnd:
 
     @pytest.mark.asyncio
     async def test_agent_id_is_project_buddy(self):
-        """Verify the agent_id 'project-buddy' is passed to Supabase."""
+        """Verify the agent_id 'project-buddy' is passed to Supabase.
+
+        ``save_conversation_message`` is called on every turn (AI messages
+        are always persisted), so that's the reliable assertion.
+        ``save_section_state`` may not fire on cold start (no content yet)
+        but is checked if it does.
+        """
         mocks, patches = _e2e_mocks()
         state = _initial_state()
 
@@ -243,10 +249,11 @@ class TestGraphEndToEnd:
             for p in patches:
                 p.stop()
 
-        # Check that save_section_state received the right agent_id
-        for call in mocks["supabase_client"].save_section_state.call_args_list:
+        # save_conversation_message is always called after an AI reply
+        assert mocks["supabase_client"].save_conversation_message.call_count >= 1
+        for call in mocks["supabase_client"].save_conversation_message.call_args_list:
             assert call.kwargs.get("agent_id") == "project-buddy"
 
-        # Check that save_conversation_message received the right agent_id
-        for call in mocks["supabase_client"].save_conversation_message.call_args_list:
+        # save_section_state may or may not fire (cold start skips PENDING sections)
+        for call in mocks["supabase_client"].save_section_state.call_args_list:
             assert call.kwargs.get("agent_id") == "project-buddy"
