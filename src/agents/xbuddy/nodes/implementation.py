@@ -58,7 +58,7 @@ async def implementation_node(state: XBuddyState, config: RunnableConfig) -> dic
         result = client.save_business_plan(
             user_id=user_id,
             thread_id=thread_id,
-            content=blueprint_markdown,
+            content='{"type":"doc","content":[]}',  # Tiptap JSON (frontend expects JSON, not Markdown)
             markdown_content=blueprint_markdown,
             agent_id="project-buddy",
         )
