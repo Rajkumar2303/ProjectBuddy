@@ -15,6 +15,7 @@ from ..models import XBuddyState
 from ..nodes import (
     generate_decision_node,
     generate_reply_node,
+    implementation_node,
     initialize_node,
     memory_updater_node,
     router_node,
@@ -30,7 +31,7 @@ def build_xbuddy_graph():
                     ^                                           |
                     +------------- memory_updater <-------------+
                                         |
-                                    -> END  (when finished=True)
+                                implementation -> END
     """
     graph = StateGraph(XBuddyState)
 
@@ -40,6 +41,7 @@ def build_xbuddy_graph():
     graph.add_node("generate_reply", generate_reply_node)
     graph.add_node("generate_decision", generate_decision_node)
     graph.add_node("memory_updater", memory_updater_node)
+    graph.add_node("implementation", implementation_node)
 
     # Add edges
     graph.add_edge(START, "initialize")
@@ -61,10 +63,12 @@ def build_xbuddy_graph():
         "memory_updater",
         route_after_memory_updater,
         {
+            "implementation": "implementation",
             "router": "router",
-            END: END,
         },
     )
+
+    graph.add_edge("implementation", END)
 
     # Compile with memory checkpointer
     memory = MemorySaver()
