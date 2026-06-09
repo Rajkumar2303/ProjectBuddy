@@ -8,19 +8,21 @@ https://github.com/Victoria824/FounderBuddy/blob/main/src/agents/founder_buddy/g
 from typing import Literal
 
 from langchain_core.messages import AIMessage, HumanMessage
+from langgraph.constants import END
 
 from ..enums import RouterDirective
 from ..models import XBuddyState
 
 
-def route_after_memory_updater(state: XBuddyState) -> Literal["implementation", "router"]:
-    """Route after memory_updater — generate final output or loop back.
+def route_after_memory_updater(state: XBuddyState) -> str | Literal[END]:
+    """Route after memory_updater — loop back to router or end the graph.
 
-    TODO: This checks should_generate_final_output. Make sure your
-    memory_updater sets this flag when all sections are complete.
+    When ``should_generate_final_output`` is True, all sections are complete
+    and the graph terminates. The ``implementation_node`` (PR 6) will later
+    synthesise the final artifact here instead of going straight to END.
     """
     if state.get("should_generate_final_output", False):
-        return "implementation"
+        return END
     return "router"
 
 
