@@ -23,19 +23,18 @@ logger = logging.getLogger(__name__)
 _AGENT_ID = "project-buddy"
 
 
-def _save_section_state(section_id: str, section_state: Any, user_id: int, thread_id: str) -> None:
+def _save_section_state(
+    client: Any,
+    section_id: str,
+    section_state: Any,
+    user_id: int,
+    thread_id: str,
+) -> None:
     """Sync helper — persists a single section state row to Supabase.
 
-    Skipped if the section has no content (PENDING sections with null
-    content are not worth writing).
+    The caller (``memory_updater_node``) is responsible for filtering out
+    sections that don't need persisting. This function trusts the caller.
     """
-    from integrations.supabase.supabase_client import SupabaseClient
-
-    if section_state.content is None and section_state.status != SectionStatus.DONE:
-        logger.debug("Skipping save for %s — no content yet", section_id)
-        return
-
-    client = SupabaseClient()
     result = client.save_section_state(
         user_id=user_id,
         thread_id=thread_id,
@@ -50,16 +49,13 @@ def _save_section_state(section_id: str, section_state: Any, user_id: int, threa
         logger.warning("Failed to save section %s: %s", section_id, result.get("error"))
 
 
-def _save_message(user_id: int, thread_id: str, msg: Any) -> None:
+def _save_message(client: Any, user_id: int, thread_id: str, msg: Any) -> None:
     """Sync helper — persists a single message to Supabase."""
-    from integrations.supabase.supabase_client import SupabaseClient
-
     role = getattr(msg, "type", "unknown")
     content = getattr(msg, "content", "")
     if not content:
         return
 
-    client = SupabaseClient()
     result = client.save_conversation_message(
         user_id=user_id,
         thread_id=thread_id,
@@ -78,10 +74,17 @@ async def memory_updater_node(state: XBuddyState, config: RunnableConfig) -> dic
     The ``route_after_memory_updater`` conditional edge decides whether to
     loop back to ``router`` or go to ``implementation``.
     """
+    from integrations.supabase.supabase_client import SupabaseClient
+
     user_id: int = state.get("user_id", 1)
+    if user_id == 1:
+        logger.warning("user_id defaulted to 1 — check that the caller is passing a real user ID")
     thread_id: str = state.get("thread_id", "unknown")
     section_states = state.get("section_states", {})
     messages = state.get("messages", [])
+
+    # Single client instance for the entire turn
+    client = SupabaseClient()
 
     # ── 1. Persist section states ────────────────────────────────────────────
     for section_id, section_state in section_states.items():
@@ -90,6 +93,7 @@ async def memory_updater_node(state: XBuddyState, config: RunnableConfig) -> dic
         try:
             await asyncio.to_thread(
                 _save_section_state,
+                client,
                 section_id,
                 section_state,
                 user_id,
@@ -101,7 +105,7 @@ async def memory_updater_node(state: XBuddyState, config: RunnableConfig) -> dic
     # ── 2. Persist the latest assistant message ──────────────────────────────
     if messages and isinstance(messages[-1], AIMessage):
         try:
-            await asyncio.to_thread(_save_message, user_id, thread_id, messages[-1])
+            await asyncio.to_thread(_save_message, client, user_id, thread_id, messages[-1])
         except Exception as exc:
             logger.error("Error persisting message: %s", exc)
 
