@@ -36,7 +36,7 @@ Wires the frontend stubs to the live FastAPI backend and Supabase, completing th
 
 ## LangSmith trace
 
-Trace URL: **Paste your LangSmith trace URL from smith.langchain.com here**
+Trace URL: https://smith.langchain.com/o/73978cd4-2623-4d25-ad61-24d621b74bd5/projects/p/fd1b485c-9e93-4499-a8f3-5de76415baa6?timeModel=%7B%22duration%22%3A%221d%22%7D&peek=20260609T042255Zff6f9c90-47bc-484f-a626-82b7b0d305e8&peekedConversationId=test-pr7-check&trace_id=ff6f9c90-47bc-484f-a626-82b7b0d305e8&run_id=20260609T042255Zff6f9c90-47bc-484f-a626-82b7b0d305e8&peeked_trace=20260609T042255523475Zff6f9c90-47bc-484f-a626-82b7b0d305e8
 
 ## Tradeoff reasoning
 
@@ -55,7 +55,7 @@ Rejected alternative: changing the database label to match the API key. This wou
 
 ## Checklist
 
-- [ ] LangSmith trace attached
+- [x] LangSmith trace attached
 - [x] Tradeoff reasoning included
 - [x] Tests pass locally (`uv run pytest tests/agents/ -v`)
 - [x] No placeholder text in prompts
