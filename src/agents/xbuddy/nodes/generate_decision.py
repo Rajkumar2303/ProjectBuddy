@@ -176,14 +176,24 @@ def _parse_decision(text: str) -> ChatAgentDecision | None:
     except (json.JSONDecodeError, ValueError, TypeError):
         pass
 
-    # Fallback: try to find a JSON object in the text using regex
-    match = re.search(r"\{[^{}]*\}", cleaned, re.DOTALL)
-    if match:
-        try:
-            data = json.loads(match.group(0))
-            return ChatAgentDecision(**data)
-        except (json.JSONDecodeError, ValueError, TypeError):
-            pass
+    # Fallback: try to find a JSON object by bracket-balancing (handles
+    # nested JSON, unlike a flat regex).
+    for i, ch in enumerate(cleaned):
+        if ch == "{":
+            depth = 0
+            for j in range(i, len(cleaned)):
+                if cleaned[j] == "{":
+                    depth += 1
+                elif cleaned[j] == "}":
+                    depth -= 1
+                if depth == 0:
+                    candidate = cleaned[i : j + 1]
+                    try:
+                        data = json.loads(candidate)
+                        return ChatAgentDecision(**data)
+                    except (json.JSONDecodeError, ValueError, TypeError):
+                        pass
+                    break  # mismatched braces — move on
 
     logger.warning("Could not parse decision from LLM response: %.100s", text)
     return None

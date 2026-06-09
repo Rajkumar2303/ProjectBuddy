@@ -11,7 +11,7 @@ This node:
 import logging
 from typing import Any
 
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 
 from core import get_model
@@ -37,12 +37,13 @@ async def generate_reply_node(state: XBuddyState, config: RunnableConfig) -> dic
     # ── 1. Build messages ────────────────────────────────────────────────────
     messages = [SystemMessage(content=system_prompt)]
 
-    # Optionally prepend draft content as assistant context
+    # Optionally prepend draft content as system context (not a user
+    # utterance, so the LLM treats it as reference material).
     draft = context_packet.draft if context_packet else None
     if draft and draft.plain_text:
         messages.append(
-            HumanMessage(
-                content=f"[Previous draft for this section:\n{draft.plain_text}\n]"
+            SystemMessage(
+                content=f"[Draft content for this section:\n{draft.plain_text}\n]"
             )
         )
 
