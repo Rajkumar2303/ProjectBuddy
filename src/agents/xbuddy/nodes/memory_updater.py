@@ -1,23 +1,114 @@
 """Memory updater node — persists section state and manages completion.
 
-Reference: https://github.com/Victoria824/FounderBuddy/blob/main/src/agents/founder_buddy/nodes/memory_updater.py
-
-This node:
-  1. Updates section_states based on the decision
-  2. Saves content to Supabase when should_save_content is True
-  3. Checks if all sections are done
-  4. Sets should_generate_final_output when ready
+Responsibilities
+----------------
+1. Iterate ``section_states`` and persist any that have content or are DONE.
+2. Persist the latest conversation message to Supabase.
+3. Return state unchanged (pure side-effect node — graph wiring already
+   handles the loop-back via ``route_after_memory_updater``).
 """
 
+import asyncio
 import logging
+from typing import Any
+
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 
+from ..enums import SectionStatus
 from ..models import XBuddyState
 
 logger = logging.getLogger(__name__)
 
+_AGENT_ID = "project-buddy"
 
-async def memory_updater_node(state: XBuddyState, config: RunnableConfig) -> XBuddyState:
-    """Update section state, persist data, check completion."""
-    # TODO: Implement — see FounderBuddy's memory_updater_node
-    raise NotImplementedError("PR 4: Implement memory_updater_node")
+
+def _save_section_state(section_id: str, section_state: Any, user_id: int, thread_id: str) -> None:
+    """Sync helper — persists a single section state row to Supabase.
+
+    Skipped if the section has no content (PENDING sections with null
+    content are not worth writing).
+    """
+    from integrations.supabase.supabase_client import SupabaseClient
+
+    if section_state.content is None and section_state.status != SectionStatus.DONE:
+        logger.debug("Skipping save for %s — no content yet", section_id)
+        return
+
+    client = SupabaseClient()
+    result = client.save_section_state(
+        user_id=user_id,
+        thread_id=thread_id,
+        section_id=section_id,
+        agent_id=_AGENT_ID,
+        content=section_state.content.content if section_state.content else {},
+        plain_text=section_state.content.plain_text if section_state.content else "",
+        status=section_state.status.value,
+        satisfaction_status=section_state.satisfaction_status,
+    )
+    if not result.get("success"):
+        logger.warning("Failed to save section %s: %s", section_id, result.get("error"))
+
+
+def _save_message(user_id: int, thread_id: str, msg: Any) -> None:
+    """Sync helper — persists a single message to Supabase."""
+    from integrations.supabase.supabase_client import SupabaseClient
+
+    role = getattr(msg, "type", "unknown")
+    content = getattr(msg, "content", "")
+    if not content:
+        return
+
+    client = SupabaseClient()
+    result = client.save_conversation_message(
+        user_id=user_id,
+        thread_id=thread_id,
+        role=role,
+        content=str(content),
+        agent_id=_AGENT_ID,
+    )
+    if not result.get("success"):
+        logger.warning("Failed to save message: %s", result.get("error"))
+
+
+async def memory_updater_node(state: XBuddyState, config: RunnableConfig) -> dict[str, Any]:
+    """Update section state, persist data, check completion.
+
+    Returns an **empty** dict — this node is a pure side-effect operation.
+    The ``route_after_memory_updater`` conditional edge decides whether to
+    loop back to ``router`` or go to ``implementation``.
+    """
+    user_id: int = state.get("user_id", 1)
+    thread_id: str = state.get("thread_id", "unknown")
+    section_states = state.get("section_states", {})
+    messages = state.get("messages", [])
+
+    # ── 1. Persist section states ────────────────────────────────────────────
+    for section_id, section_state in section_states.items():
+        if section_state.content is None and section_state.status != SectionStatus.DONE:
+            continue
+        try:
+            await asyncio.to_thread(
+                _save_section_state,
+                section_id,
+                section_state,
+                user_id,
+                thread_id,
+            )
+        except Exception as exc:
+            logger.error("Error persisting section %s: %s", section_id, exc)
+
+    # ── 2. Persist the latest assistant message ──────────────────────────────
+    if messages and isinstance(messages[-1], AIMessage):
+        try:
+            await asyncio.to_thread(_save_message, user_id, thread_id, messages[-1])
+        except Exception as exc:
+            logger.error("Error persisting message: %s", exc)
+
+    logger.info(
+        "Memory updated — %d section(s), %d message(s)",
+        len(section_states),
+        len(messages),
+    )
+
+    return {}
