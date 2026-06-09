@@ -15,14 +15,14 @@ from ..models import XBuddyState
 
 
 def route_after_memory_updater(state: XBuddyState) -> str | Literal[END]:
-    """Route after memory_updater — loop back to router or end the graph.
+    """Route after memory_updater — generate final output or loop back.
 
     When ``should_generate_final_output`` is True, all sections are complete
-    and the graph terminates. The ``implementation_node`` (PR 6) will later
-    synthesise the final artifact here instead of going straight to END.
+    and the graph proceeds to ``implementation_node`` to synthesise the
+    final Project Blueprint.
     """
     if state.get("should_generate_final_output", False):
-        return END
+        return "implementation"
     return "router"
 
 
