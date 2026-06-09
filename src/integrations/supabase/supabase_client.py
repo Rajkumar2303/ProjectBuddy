@@ -141,4 +141,38 @@ class SupabaseClient:
         except Exception as e:
             logger.error(f"Error getting section states: {e}")
             return []
+    
+    def save_conversation_message(
+        self,
+        user_id: int,
+        thread_id: str,
+        role: str,
+        content: str,
+        agent_id: str = "project-buddy",
+        metadata: dict | None = None,
+    ) -> dict:
+        """Save a single conversation message to Supabase (synchronous operation).
+
+        The ``conversation_messages`` table stores the full message history
+        for each thread, enabling the ``/history`` endpoint and post-session
+        debugging.
+        """
+        try:
+            row = {
+                "user_id": user_id,
+                "thread_id": thread_id,
+                "agent_id": agent_id,
+                "role": role,
+                "content": content,
+            }
+            if metadata is not None:
+                row["metadata"] = metadata
+
+            result = self.client.table("conversation_messages").insert(row).execute()
+
+            logger.debug(f"Conversation message saved: role={role} for user {user_id}")
+            return {"success": True, "data": result.data}
+        except Exception as e:
+            logger.error(f"Error saving conversation message: {e}")
+            return {"success": False, "error": str(e)}
 
