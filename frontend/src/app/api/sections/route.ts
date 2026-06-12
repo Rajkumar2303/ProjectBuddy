@@ -256,7 +256,7 @@ export async function POST(req: NextRequest) {
           userId: finalUserId,
           threadId: threadId,
           sectionId: sectionId,
-          agentId: 'xbuddy'
+          agentId: 'project-buddy'
         });
         
         const { data: sectionState, error } = await supabase
@@ -264,7 +264,7 @@ export async function POST(req: NextRequest) {
           .select('*')
           .eq('user_id', finalUserId)
           .eq('thread_id', threadId)
-          .eq('agent_id', 'xbuddy')
+          .eq('agent_id', 'project-buddy')
           .eq('section_id', sectionId)
           .maybeSingle();
         
