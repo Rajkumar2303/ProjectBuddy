@@ -73,11 +73,12 @@ const getSupabaseClient = () => {
 };
 
 // XBuddy section mapping (string ID to display info)
-const FOUNDER_BUDDY_SECTIONS: Record<string, { name: string; displayName: string }> = {
-  'mission': { name: 'Mission', displayName: 'Mission' },
-  'idea': { name: 'Idea', displayName: 'Idea' },
-  'team_traction': { name: 'Team & Traction', displayName: 'Team & Traction' },
-  'invest_plan': { name: 'Investment Plan', displayName: 'Investment Plan' },
+const XBUDDY_SECTIONS: Record<string, { name: string; displayName: string }> = {
+  'project_idea': { name: 'Project Idea', displayName: 'Project Idea & Goals' },
+  'requirements': { name: 'Requirements', displayName: 'Requirements Gathering' },
+  'architecture': { name: 'Architecture', displayName: 'Architecture Design' },
+  'tech_stack': { name: 'Tech Stack', displayName: 'Technology Selection' },
+  'implementation': { name: 'Implementation', displayName: 'Implementation Planning' },
 };
 
 export async function POST(req: NextRequest) {
@@ -128,7 +129,7 @@ export async function POST(req: NextRequest) {
           .from('section_states')
           .select('*')
           .eq('user_id', finalUserId)
-          .eq('agent_id', 'xbuddy');
+          .eq('agent_id', 'project-buddy');
         
         if (threadId) {
           query = query.eq('thread_id', threadId);
@@ -159,7 +160,7 @@ export async function POST(req: NextRequest) {
         if (sectionStates && sectionStates.length > 0) {
           for (const state of sectionStates) {
             const sectionId = state.section_id;
-            const sectionInfo = FOUNDER_BUDDY_SECTIONS[sectionId];
+            const sectionInfo = XBUDDY_SECTIONS[sectionId];
             
             if (sectionInfo) {
               // Use section_id as key, keep latest version if multiple threads
@@ -190,7 +191,7 @@ export async function POST(req: NextRequest) {
         
         // If no sections found in DB, return all possible sections with pending status
         if (sectionsMap.size === 0) {
-          for (const [sectionId, sectionInfo] of Object.entries(FOUNDER_BUDDY_SECTIONS)) {
+          for (const [sectionId, sectionInfo] of Object.entries(XBUDDY_SECTIONS)) {
             sectionsMap.set(sectionId, {
               section_id: sectionId,
               section_name: sectionInfo.name,
@@ -255,7 +256,7 @@ export async function POST(req: NextRequest) {
           userId: finalUserId,
           threadId: threadId,
           sectionId: sectionId,
-          agentId: 'xbuddy'
+          agentId: 'project-buddy'
         });
         
         const { data: sectionState, error } = await supabase
@@ -263,7 +264,7 @@ export async function POST(req: NextRequest) {
           .select('*')
           .eq('user_id', finalUserId)
           .eq('thread_id', threadId)
-          .eq('agent_id', 'xbuddy')
+          .eq('agent_id', 'project-buddy')
           .eq('section_id', sectionId)
           .maybeSingle();
         
